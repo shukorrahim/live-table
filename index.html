@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#eef0f2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#16191d" media="(prefers-color-scheme: dark)">
-<title>List of Students</title>
+<title>Student Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
@@ -26,21 +26,46 @@
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Barlow,system-ui,sans-serif}
-.wrap{max-width:1000px;margin:0 auto;padding:24px 16px 48px}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 48px}
 h1{font:700 2rem/1.1 "Barlow Condensed",sans-serif;letter-spacing:.02em;margin:0 0 4px;text-transform:uppercase}
+h2{font:700 1.5rem/1.1 "Barlow Condensed",sans-serif;letter-spacing:.02em;margin:0;text-transform:uppercase}
 .sub{color:var(--muted);margin:0 0 20px}
 .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
 .status{display:inline-flex;align-items:center;gap:8px;font:600 .9rem "Barlow Condensed",sans-serif;
   letter-spacing:.05em;text-transform:uppercase;background:var(--panel);border:1px solid var(--line);
   border-radius:6px;padding:6px 12px}
-.dot{width:10px;height:10px;border-radius:50%;background:var(--warn)}
-.status.live .dot{background:var(--ok);animation:pulse 2s infinite}
-.status.err .dot{background:var(--bad)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--warn);flex:none}
+.live .dot{background:var(--ok);animation:pulse 2s infinite}
+.err .dot{background:var(--bad)}
 @keyframes pulse{50%{opacity:.35}}
 .meta{color:var(--muted);font-size:.9rem}
+
+/* Tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.tile{position:relative;display:flex;flex-direction:column;gap:6px;min-height:150px;text-align:left;
+  font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:14px 16px;border-top:4px solid var(--head)}
+button.tile{cursor:pointer}
+button.tile:hover{border-color:var(--accent);border-top-color:var(--accent)}
+button.tile:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tile.empty{border-style:dashed;border-top:4px dashed var(--line);color:var(--muted)}
+.tile .num{font:600 .8rem "Barlow Condensed",sans-serif;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.tile .name{font:700 1.25rem/1.15 "Barlow Condensed",sans-serif;letter-spacing:.02em;text-transform:uppercase}
+.tile .big{font:700 2.6rem/1 "Barlow Condensed",sans-serif;margin-top:auto}
+.tile .big small{font:500 1rem Barlow,sans-serif;color:var(--muted);margin-left:6px}
+.tile .foot{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .foot span:last-child{overflow:hidden;text-overflow:ellipsis}
+.tile.empty .big{color:var(--line)}
+.tile.flash{animation:flash 3s}
+@keyframes flash{0%,40%{background:var(--new)}}
+
+/* Detail view */
+#detail[hidden],#home[hidden]{display:none}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:14px}
 .search{flex:1 1 220px;min-width:0;font:inherit;color:var(--ink);background:var(--panel);
   border:1px solid var(--line);border-radius:6px;padding:8px 12px;min-height:44px}
-button{font:600 .95rem "Barlow Condensed",sans-serif;letter-spacing:.05em;text-transform:uppercase;
+button.btn{font:600 .95rem "Barlow Condensed",sans-serif;letter-spacing:.05em;text-transform:uppercase;
   color:var(--head-ink);background:var(--head);border:0;border-radius:6px;padding:8px 16px;min-height:44px;cursor:pointer}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:auto}
 table{border-collapse:collapse;width:100%;font-size:.95rem}
@@ -51,11 +76,15 @@ th .arr{opacity:.6;margin-left:4px}
 td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}
 tbody tr:nth-child(even){background:var(--stripe)}
 tr.changed td{background:var(--new);transition:background 4s}
-.empty,.msg{padding:24px;text-align:center;color:var(--muted)}
+.msg{padding:24px;text-align:center;color:var(--muted)}
 .msg.err{color:var(--bad)}
 .count{color:var(--muted);font-size:.9rem;margin-top:8px}
 @media (max-width:600px){
   h1{font-size:1.6rem}
+  .tiles{grid-template-columns:1fr 1fr;gap:10px}
+  .tile{min-height:130px;padding:12px}
+  .tile .name{font-size:1.05rem}
+  .tile .big{font-size:2.1rem}
   table{font-size:.9rem}
   td,th{padding:8px}
 }
@@ -63,98 +92,143 @@ tr.changed td{background:var(--new);transition:background 4s}
 </head>
 <body>
 <div class="wrap">
-  <h1 id="title">List of Students</h1>
-  <p class="sub">This table updates by itself when the Google Sheet changes. You do not need to reload the page.</p>
 
-  <div class="bar">
-    <span class="status" id="status"><span class="dot"></span><span id="statusText">Connecting…</span></span>
-    <span class="meta" id="updated"></span>
-  </div>
-  <div class="bar">
-    <input class="search" id="search" type="search" placeholder="Search name or matric number…" aria-label="Search">
-    <button id="refresh" type="button">Refresh now</button>
-  </div>
+  <section id="home">
+    <h1>Student Dashboard</h1>
+    <p class="sub">Tiles update by themselves when the Google Sheet changes. Tap a tile to see its list.</p>
+    <div class="bar">
+      <span class="status" id="status"><span class="dot"></span><span id="statusText">Connecting…</span></span>
+      <span class="meta" id="updated"></span>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </section>
 
-  <div class="card"><div id="table"><div class="msg">Loading…</div></div></div>
-  <div class="count" id="count"></div>
+  <section id="detail" hidden>
+    <div class="top">
+      <button class="btn" id="back" type="button">← Dashboard</button>
+      <h2 id="dTitle"></h2>
+    </div>
+    <div class="bar">
+      <input class="search" id="search" type="search" placeholder="Search…" aria-label="Search">
+      <button class="btn" id="refresh" type="button">Refresh now</button>
+    </div>
+    <div class="card"><div id="table"></div></div>
+    <div class="count" id="count"></div>
+  </section>
+
 </div>
 
 <script>
 // ===== Edit here =====
 // SHEET_ID: the long code in the Google Sheet link, docs.google.com/spreadsheets/d/<SHEET_ID>/edit
-// SHEET_GID: the tab number after "gid=" in the link (0 = first tab)
 // The sheet must be shared as "Anyone with the link: Viewer".
 const SHEET_ID = '1g9lacQ-vSstcPUwgzGZ8V3uXljUm7OOi_wukijTc2k0';
-const SHEET_GID = '0';
 const REFRESH_SECONDS = 20;
+// One entry per tile. To fill an empty tile, give it a "sheet": the tab name in the Google Sheet
+// (e.g. sheet: 'Penerima Geran') and a title. "unit" is the word after the count. Tiles without a sheet stay empty.
+const TILES = [
+  { title: 'Students Name',  sheet: 'Sheet1', unit: 'students' },
+  { title: 'Penerima Geran' },
+  { title: '' },
+  { title: '' },
+  { title: '' },
+  { title: '' },
+  { title: '' },
+  { title: '' },
+  { title: '' },
+  { title: '' },
+];
 // =====================
 
-const params = new URLSearchParams(location.search);
-const sheetId = params.get('id') || SHEET_ID;
-const gid = params.get('gid') || SHEET_GID;
-
 const $ = id => document.getElementById(id);
-let header = [], rows = [], lastJson = '', sortCol = -1, sortDir = 1, changedKeys = new Set();
-
-function setStatus(kind, text){
-  $('status').className = 'status ' + kind;
-  $('statusText').textContent = text;
-}
-
-// Google's "gviz" endpoint returns the current sheet within seconds of an edit.
-// The reply is JSON wrapped in a function call, so strip the wrapper.
-async function load(){
-  if (!sheetId || sheetId.startsWith('PASTE')){
-    setStatus('err', 'No sheet set');
-    $('table').innerHTML = '<div class="msg err">Set SHEET_ID in index.html.</div>';
-    return;
-  }
-  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&gid=${gid}&headers=1&_=${Date.now()}`;
-  try{
-    const res = await fetch(url, {cache:'no-store'});
-    const text = await res.text();
-    const start = text.indexOf('{'), end = text.lastIndexOf('}');
-    if (start < 0) throw new Error('The sheet is not shared as "Anyone with the link".');
-    const data = JSON.parse(text.slice(start, end + 1));
-    if (data.status === 'error') throw new Error(data.errors.map(e => e.detailed_message || e.message).join('; '));
-
-    let cols = data.table.cols.map(c => c.label || '');
-    let newRows = data.table.rows.map(r => cols.map((_, i) => {
-      const cell = r.c[i];
-      if (!cell) return '';
-      return cell.f != null ? String(cell.f) : (cell.v == null ? '' : String(cell.v));
-    })).filter(r => r.some(v => v !== ''));
-    // Drop blank columns (no heading and no data); name the rest by letter if unlabelled
-    const keep = cols.map((h, i) => h !== '' || newRows.some(r => r[i] !== ''));
-    cols = cols.map((h, i) => h || 'Column ' + data.table.cols[i].id).filter((_, i) => keep[i]);
-    newRows = newRows.map(r => r.filter((_, i) => keep[i]));
-
-    const json = JSON.stringify([cols, newRows]);
-    if (json !== lastJson){
-      // Mark rows that are new or changed since the last load (not on the first load)
-      if (lastJson){
-        const old = new Set(rows.map(r => r.join('\u0001')));
-        changedKeys = new Set(newRows.map(r => r.join('\u0001')).filter(k => !old.has(k)));
-      }
-      header = cols; rows = newRows; lastJson = json;
-      render();
-    }
-    setStatus('live', 'Live');
-    $('updated').textContent = 'Last checked ' + new Date().toLocaleTimeString();
-  }catch(err){
-    setStatus('err', 'Offline');
-    if (!rows.length) $('table').innerHTML = '<div class="msg err">Could not read the sheet. ' + escapeHtml(err.message) + '</div>';
-    $('updated').textContent = 'Retrying in ' + REFRESH_SECONDS + ' s';
-  }
-}
+// Per tile: header, rows, last JSON seen, rows that changed on the last load
+const data = TILES.map(() => ({header: [], rows: [], json: '', changed: new Set(), error: ''}));
+let open = -1, sortCol = -1, sortDir = 1;
 
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function render(){
+// Google's "gviz" endpoint returns the current sheet within seconds of an edit.
+// The reply is JSON wrapped in a function call, so strip the wrapper.
+async function loadTile(i){
+  const t = TILES[i], d = data[i];
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1`
+    + `&sheet=${encodeURIComponent(t.sheet)}&_=${Date.now()}`;
+  try{
+    const res = await fetch(url, {cache:'no-store'});
+    const text = await res.text();
+    const start = text.indexOf('{'), end = text.lastIndexOf('}');
+    if (start < 0) throw new Error('The sheet is not shared as "Anyone with the link".');
+    const reply = JSON.parse(text.slice(start, end + 1));
+    if (reply.status === 'error') throw new Error(reply.errors.map(e => e.detailed_message || e.message).join('; '));
+
+    let cols = reply.table.cols.map(c => c.label || '');
+    let rows = reply.table.rows.map(r => cols.map((_, k) => {
+      const cell = r.c[k];
+      if (!cell) return '';
+      return cell.f != null ? String(cell.f) : (cell.v == null ? '' : String(cell.v));
+    })).filter(r => r.some(v => v !== ''));
+    // Drop blank columns (no heading and no data); name the rest by letter if unlabelled
+    const keep = cols.map((h, k) => h !== '' || rows.some(r => r[k] !== ''));
+    cols = cols.map((h, k) => h || 'Column ' + reply.table.cols[k].id).filter((_, k) => keep[k]);
+    rows = rows.map(r => r.filter((_, k) => keep[k]));
+
+    const json = JSON.stringify([cols, rows]);
+    d.error = '';
+    if (json === d.json) return false;
+    // Mark rows that are new or changed since the last load (not on the first load)
+    if (d.json){
+      const old = new Set(d.rows.map(r => r.join('\u0001')));
+      d.changed = new Set(rows.map(r => r.join('\u0001')).filter(k => !old.has(k)));
+    }
+    const first = !d.json;
+    d.header = cols; d.rows = rows; d.json = json;
+    return !first;
+  }catch(err){
+    d.error = err.message;
+    return false;
+  }
+}
+
+async function loadAll(){
+  const ids = TILES.map((t, i) => t.sheet ? i : -1).filter(i => i >= 0);
+  const changed = await Promise.all(ids.map(loadTile));
+  const failed = ids.some(i => data[i].error);
+  $('status').className = 'status ' + (failed ? 'err' : 'live');
+  $('statusText').textContent = failed ? 'Offline' : 'Live';
+  $('updated').textContent = failed
+    ? 'Retrying in ' + REFRESH_SECONDS + ' s'
+    : 'Last checked ' + new Date().toLocaleTimeString();
+  renderTiles(ids.filter((_, k) => changed[k]));
+  if (open >= 0) renderTable();
+}
+
+function renderTiles(flash = []){
+  $('tiles').innerHTML = TILES.map((t, i) => {
+    const num = `<span class="num">Tile ${i + 1}</span>`;
+    if (!t.sheet){
+      return `<div class="tile empty">${num}<span class="name">${escapeHtml(t.title || "Empty")}</span>`
+        + `<span class="big">–</span><span class="foot">No data yet</span></div>`;
+    }
+    const d = data[i];
+    const loaded = !!d.json;
+    const last = d.rows.length ? d.rows[d.rows.length - 1] : null;
+    // Show the newest row's name (2nd column if there is one) as a preview
+    const preview = last ? 'Latest: ' + (last[1] || last[0]) : (d.error ? 'Could not read the sheet' : 'Loading…');
+    return `<button type="button" class="tile${flash.includes(i) ? ' flash' : ''}" data-i="${i}">${num}`
+      + `<span class="name">${escapeHtml(t.title)}</span>`
+      + `<span class="big">${loaded ? d.rows.length : '…'}<small>${escapeHtml(t.unit || 'rows')}</small></span>`
+      + `<span class="foot ${d.error ? 'err' : 'live'}"><span class="dot"></span><span>${escapeHtml(preview)}</span></span></button>`;
+  }).join('');
+}
+
+function renderTable(){
+  const d = data[open];
+  if (d.error && !d.json){ $('table').innerHTML = '<div class="msg err">Could not read the sheet. ' + escapeHtml(d.error) + '</div>'; return; }
+  if (!d.header.length){ $('table').innerHTML = '<div class="msg">' + (d.json ? 'The sheet is empty.' : 'Loading…') + '</div>'; return; }
   const q = $('search').value.trim().toLowerCase();
-  let list = rows.filter(r => !q || r.some(v => v.toLowerCase().includes(q)));
+  let list = d.rows.filter(r => !q || r.some(v => v.toLowerCase().includes(q)));
   if (sortCol >= 0){
     list = list.slice().sort((a, b) => {
       const x = a[sortCol], y = b[sortCol];
@@ -164,37 +238,60 @@ function render(){
       return cmp * sortDir;
     });
   }
-  if (!header.length){ $('table').innerHTML = '<div class="empty">The sheet is empty.</div>'; return; }
-
-  const th = header.map((h, i) =>
+  const th = d.header.map((h, i) =>
     `<th data-i="${i}">${escapeHtml(h)}<span class="arr">${i === sortCol ? (sortDir > 0 ? '▲' : '▼') : ''}</span></th>`).join('');
   const body = list.length
-    ? list.map(r => `<tr${changedKeys.has(r.join('\u0001')) ? ' class="changed"' : ''}>${r.map(v => `<td>${escapeHtml(v)}</td>`).join('')}</tr>`).join('')
-    : `<tr><td colspan="${header.length}" class="empty">No matching rows.</td></tr>`;
+    ? list.map(r => `<tr${d.changed.has(r.join('\u0001')) ? ' class="changed"' : ''}>${r.map(v => `<td>${escapeHtml(v)}</td>`).join('')}</tr>`).join('')
+    : `<tr><td colspan="${d.header.length}" class="msg">No matching rows.</td></tr>`;
   $('table').innerHTML = `<table><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table>`;
-  $('count').textContent = q ? `${list.length} of ${rows.length} rows` : `${rows.length} rows`;
+  $('count').textContent = q ? `${list.length} of ${d.rows.length} rows` : `${d.rows.length} rows`;
 
   // Fade the yellow "changed" highlight after a few seconds
-  if (changedKeys.size){
+  if (d.changed.size){
     setTimeout(() => document.querySelectorAll('tr.changed').forEach(tr => tr.classList.remove('changed')), 1500);
-    changedKeys = new Set();
+    d.changed = new Set();
   }
 }
 
+// Open a tile's list; the address (#tile1) lets the back button and links work
+function show(){
+  const m = location.hash.match(/^#tile(\d+)$/);
+  const i = m ? +m[1] - 1 : -1;
+  open = (i >= 0 && TILES[i] && TILES[i].sheet) ? i : -1;
+  $('home').hidden = open >= 0;
+  $('detail').hidden = open < 0;
+  if (open >= 0){
+    $('dTitle').textContent = TILES[open].title;
+    $('search').value = ''; sortCol = -1; sortDir = 1;
+    renderTable();
+    scrollTo(0, 0);
+  }
+}
+
+$('tiles').addEventListener('click', e => {
+  const tile = e.target.closest('button.tile');
+  if (tile) location.hash = 'tile' + (+tile.dataset.i + 1);
+});
+$('back').addEventListener('click', () => {
+  if (history.length > 1 && location.hash) history.back(); else location.hash = '';
+});
 $('table').addEventListener('click', e => {
   const th = e.target.closest('th');
   if (!th) return;
   const i = +th.dataset.i;
   if (sortCol === i) sortDir = -sortDir; else { sortCol = i; sortDir = 1; }
-  render();
+  renderTable();
 });
-$('search').addEventListener('input', render);
-$('refresh').addEventListener('click', load);
-// Check again straight away when the student comes back to the tab
-document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+$('search').addEventListener('input', renderTable);
+$('refresh').addEventListener('click', loadAll);
+addEventListener('hashchange', show);
+// Check again straight away when someone comes back to the tab
+document.addEventListener('visibilitychange', () => { if (!document.hidden) loadAll(); });
 
-load();
-setInterval(() => { if (!document.hidden) load(); }, REFRESH_SECONDS * 1000);
+renderTiles();
+show();
+loadAll();
+setInterval(() => { if (!document.hidden) loadAll(); }, REFRESH_SECONDS * 1000);
 </script>
 </body>
 </html>
